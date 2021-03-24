@@ -25,19 +25,26 @@ public class SegmentImpl implements Segment {
     private boolean isReadOnly = false;
     private long curOffset = 0;
 
-    static Segment create(String segmentName, Path tableRootPath) throws DatabaseException, IOException {
+    static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
         File segmentFile = new File (tableRootPath.toString() + segmentName);
-        if (!segmentFile.exists())
-            throw new DatabaseException("Segment " + segmentName + " already exists!");
-        if (!segmentFile.createNewFile())
-            throw new IOException("Impossible to create " + segmentName + " table.");
+
+        try {
+            if (!segmentFile.createNewFile())
+                throw new DatabaseException("Segment " + segmentName + " already exists!");
+        } catch (IOException ex) {
+            throw new DatabaseException("Impossible to create " + segmentName + " table.");
+        }
 
         SegmentImpl segment = new SegmentImpl();
         segment.setSegmentName(segmentName);
         segment.setSegmentIndex(new SegmentIndex());
 
-        segment.setInStream(new DatabaseInputStream(new FileInputStream(segmentFile)));
-        segment.setOutStream(new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
+        try {
+            segment.setInStream(new DatabaseInputStream(new FileInputStream(segmentFile)));
+            segment.setOutStream(new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
+        } catch (FileNotFoundException ex) {
+            throw new DatabaseException(segmentName + " is not found.", ex);
+        }
 
 
         return segment;

@@ -14,14 +14,13 @@ import java.util.Optional;
 public class DatabaseImpl implements Database {
 
 
-
     private String dbName;
     private Path databaseRoot;
     private List<Table> tables;
 
     public static Database create(String dbName, Path databaseRoot) throws DatabaseException {
-        File dbDir = new File (databaseRoot.toString() + dbName);
-        if (!dbDir.exists())
+        File dbDir = new File (databaseRoot.toString(), dbName);
+        if (dbDir.exists())
             throw new DatabaseException("Database " + dbName + " already exists!");
         if (!dbDir.mkdir())
             throw new DatabaseException("Impossible to create " + dbName + " database.");

@@ -21,8 +21,8 @@ public class TableImpl implements Table {
     private List<Segment> segments;
 
     static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
-        File tableDir = new File (pathToDatabaseRoot.toString() + tableName);
-        if (!tableDir.exists())
+        File tableDir = new File (pathToDatabaseRoot.toString(), tableName);
+        if (tableDir.exists())
             throw new DatabaseException("Table " + tableName + " already exists!");
         if (!tableDir.mkdir())
             throw new DatabaseException("Impossible to create " + tableName + " table.");
@@ -64,7 +64,7 @@ public class TableImpl implements Table {
             try {
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                         Path.of(pathToDatabaseRoot.toString(), tableName)));
-            } catch (IOException ex) {
+            } catch (DatabaseException ex) {
                 throw new DatabaseException("Error while creating segment instance.", ex);
             }
 
@@ -74,7 +74,7 @@ public class TableImpl implements Table {
                     try {
                         segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                                 Path.of(pathToDatabaseRoot.toString(), tableName)));
-                    } catch (IOException ex) {
+                    } catch (DatabaseException ex) {
                         throw new DatabaseException("Error while creating segment instance.", ex);
                     }
             } catch (IOException ex) {
@@ -110,7 +110,7 @@ public class TableImpl implements Table {
                 try {
                     segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                             Path.of(pathToDatabaseRoot.toString(), tableName)));
-                } catch (IOException ex) {
+                } catch (DatabaseException ex) {
                     throw new DatabaseException("Error while creating segment instance.", ex);
                 }
         } catch (IOException ex) {
