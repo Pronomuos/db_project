@@ -26,16 +26,18 @@ public class DatabaseInputStream extends DataInputStream {
     public Optional<DatabaseRecord> readDbUnit() throws IOException {
         Optional<DatabaseRecord> record = Optional.empty();
         int keySize, valSize;
-        byte [] key, value;
+        byte [] key, value = null;
         try {
             keySize = readInt();
             key = new byte[keySize];
             for (int i = 0; i < keySize; ++i)
                 key[i] = readByte();
             valSize = readInt();
-            value = new byte[keySize];
-            for (int i = 0; i < keySize; ++i)
-                value[i] = readByte();
+            if (valSize != -1) {
+                value = new byte[valSize];
+                for (int i = 0; i < valSize; ++i)
+                    value[i] = readByte();
+            }
         } catch (EOFException ex) {
             return record;
         } catch (IOException ex) {
@@ -43,7 +45,7 @@ public class DatabaseInputStream extends DataInputStream {
         }
 
         try {
-             record = Optional.of(SetDatabaseRecord.builder().
+            record = Optional.of(SetDatabaseRecord.builder().
                     keySize(keySize).
                     key(key).
                     valSize(valSize).
@@ -56,3 +58,4 @@ public class DatabaseInputStream extends DataInputStream {
         return record;
     }
 }
+

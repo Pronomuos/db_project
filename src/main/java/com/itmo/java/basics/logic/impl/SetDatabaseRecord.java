@@ -41,8 +41,7 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
 
     @Override
     public long size() {
-        return  4 * 2 + keySize +
-                valSize == -1 ? 0 : valSize;
+        return  4 * 2 + keySize + (valSize == -1 ? 0 : valSize);
     }
 
     @Override
@@ -112,3 +111,4 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
         }
     }
 }
+

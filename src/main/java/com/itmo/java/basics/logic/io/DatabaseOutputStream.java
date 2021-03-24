@@ -36,8 +36,9 @@ public class DatabaseOutputStream extends DataOutputStream {
             for (var i : databaseRecord.getKey())
                 writeByte(i);
             writeInt(databaseRecord.getValueSize());
-            for (var i : databaseRecord.getValue())
-                writeByte(i);
+            if (databaseRecord.getValue() != null)
+                for (var i : databaseRecord.getValue())
+                    writeByte(i);
         } catch (Throwable ex) {
             throw new IOException("Could not write data into the file.", ex);
         }

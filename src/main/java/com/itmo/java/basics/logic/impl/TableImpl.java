@@ -68,18 +68,18 @@ public class TableImpl implements Table {
                 throw new DatabaseException("Error while creating segment instance.", ex);
             }
 
-            tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
-            try {
-                if (!segments.get(segments.size() - 1).write(objectKey, objectValue))
-                    try {
-                        segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
-                                Path.of(pathToDatabaseRoot.toString(), tableName)));
-                    } catch (DatabaseException ex) {
-                        throw new DatabaseException("Error while creating segment instance.", ex);
-                    }
-            } catch (IOException ex) {
-                throw new DatabaseException("Error while writing data into segment.", ex);
-            }
+        tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
+        try {
+            if (!segments.get(segments.size() - 1).write(objectKey, objectValue))
+                try {
+                    segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
+                            Path.of(pathToDatabaseRoot.toString(), tableName)));
+                } catch (DatabaseException ex) {
+                    throw new DatabaseException("Error while creating segment instance.", ex);
+                }
+        } catch (IOException ex) {
+            throw new DatabaseException("Error while writing data into segment.", ex);
+        }
     }
 
     @Override

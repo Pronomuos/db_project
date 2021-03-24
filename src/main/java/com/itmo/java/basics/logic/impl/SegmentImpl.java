@@ -26,7 +26,7 @@ public class SegmentImpl implements Segment {
     private long curOffset = 0;
 
     static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
-        File segmentFile = new File (tableRootPath.toString() + segmentName);
+        File segmentFile = new File (tableRootPath.toString(), segmentName);
 
         try {
             if (!segmentFile.createNewFile())
@@ -34,6 +34,7 @@ public class SegmentImpl implements Segment {
         } catch (IOException ex) {
             throw new DatabaseException("Impossible to create " + segmentName + " table.");
         }
+
 
         SegmentImpl segment = new SegmentImpl();
         segment.setSegmentName(segmentName);
@@ -78,15 +79,15 @@ public class SegmentImpl implements Segment {
             record = SetDatabaseRecord.builder().
                     keySize(objectKey.length()).
                     key(objectKey.getBytes()).
-                    valSize(objectValue.length).
+                    valSize(objectValue == null ? -1 : objectValue.length).
                     value(objectValue).
                     build();
         } catch (DatabaseException ex) {
             throw new IOException("Error while converting data into record.", ex);
         }
 
-        curOffset += outStream.write(record);
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
+        curOffset += outStream.write(record);
         if (curOffset >= maxSize) {
             isReadOnly = true;
             return false;
@@ -135,3 +136,4 @@ public class SegmentImpl implements Segment {
         return true;
     }
 }
+
