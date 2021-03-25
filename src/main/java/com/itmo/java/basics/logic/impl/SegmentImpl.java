@@ -79,7 +79,8 @@ public class SegmentImpl implements Segment {
             record = SetDatabaseRecord.builder().
                     keySize(objectKey.length()).
                     key(objectKey.getBytes()).
-                    valSize(objectValue == null ? -1 : objectValue.length).
+                    valSize(Optional.ofNullable(objectValue).isEmpty() ||
+                            objectValue.length == 0 ? -1 : objectValue.length).
                     value(objectValue).
                     build();
         } catch (DatabaseException ex) {
@@ -89,6 +90,7 @@ public class SegmentImpl implements Segment {
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
         curOffset += outStream.write(record);
         if (curOffset >= maxSize) {
+            outStream.close();
             isReadOnly = true;
             return false;
         }
@@ -136,4 +138,3 @@ public class SegmentImpl implements Segment {
         return true;
     }
 }
-

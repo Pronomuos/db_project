@@ -45,3 +45,4 @@ public class RemoveDatabaseRecord implements WritableDatabaseRecord {
         return -1;
     }
 }
+

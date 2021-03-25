@@ -99,8 +99,8 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
             if (keySize < 0 || valSize < -1)
                 throw new DatabaseException("Invalid key or value sizes.");
 
-            if (valSize == -1 && value != null)
-                throw new DatabaseException("Database should be empty with value size -1.");
+            /*if (valSize == -1 && value != null)
+                throw new DatabaseException("Database should be empty with value size -1.");*/
 
             record.setKeySize(keySize);
             record.setKey(key);

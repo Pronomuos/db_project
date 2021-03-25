@@ -60,23 +60,16 @@ public class TableImpl implements Table {
 
     @Override
     public void write(String objectKey, byte[] objectValue) throws DatabaseException {
-        if(segments.isEmpty())
-            try {
+        if (segments.isEmpty())
+            segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
+                    Path.of(pathToDatabaseRoot.toString(), tableName)));
+
+        var segment = segments.get(segments.size() - 1);
+        tableIndex.onIndexedEntityUpdated(objectKey, segment);
+        try {
+            if (!segment.write(objectKey, objectValue))
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                         Path.of(pathToDatabaseRoot.toString(), tableName)));
-            } catch (DatabaseException ex) {
-                throw new DatabaseException("Error while creating segment instance.", ex);
-            }
-
-        tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
-        try {
-            if (!segments.get(segments.size() - 1).write(objectKey, objectValue))
-                try {
-                    segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
-                            Path.of(pathToDatabaseRoot.toString(), tableName)));
-                } catch (DatabaseException ex) {
-                    throw new DatabaseException("Error while creating segment instance.", ex);
-                }
         } catch (IOException ex) {
             throw new DatabaseException("Error while writing data into segment.", ex);
         }
@@ -107,12 +100,8 @@ public class TableImpl implements Table {
         tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
         try {
             if (!segments.get(segments.size() - 1).delete(objectKey))
-                try {
-                    segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
-                            Path.of(pathToDatabaseRoot.toString(), tableName)));
-                } catch (DatabaseException ex) {
-                    throw new DatabaseException("Error while creating segment instance.", ex);
-                }
+                segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
+                        Path.of(pathToDatabaseRoot.toString(), tableName)));
         } catch (IOException ex) {
             throw new DatabaseException("Error while writing data into segment.", ex);
         }
