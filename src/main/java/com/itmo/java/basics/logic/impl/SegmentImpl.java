@@ -11,6 +11,8 @@ import com.itmo.java.basics.logic.io.DatabaseInputStream;
 import com.itmo.java.basics.logic.io.DatabaseOutputStream;
 
 import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -19,8 +21,8 @@ public class SegmentImpl implements Segment {
     private static final int maxSize = 100_000;
 
     private String segmentName;
-    private String tableRootPath;
     private SegmentIndex segmentIndex;
+    private String tableRootPath;
     private DatabaseOutputStream outStream;
     private long curOffset = 0;
 
@@ -37,8 +39,8 @@ public class SegmentImpl implements Segment {
 
         SegmentImpl segment = new SegmentImpl();
         segment.setSegmentName(segmentName);
-        segment.setTableRootPath(tableRootPath.toString());
         segment.setSegmentIndex(new SegmentIndex());
+        segment.setTableRootPath(tableRootPath.toString());
 
         try {
             segment.setOutStream(new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
@@ -64,6 +66,7 @@ public class SegmentImpl implements Segment {
     public void setTableRootPath(String tableRootPath) {
         this.tableRootPath = tableRootPath;
     }
+
 
     public void setOutStream(DatabaseOutputStream outStream) { this.outStream = outStream; }
 
@@ -97,10 +100,11 @@ public class SegmentImpl implements Segment {
         if (offset.isEmpty())
             return Optional.empty();
 
-        try (var inStream = new DatabaseInputStream(new FileInputStream(tableRootPath + "/" + segmentName))) {
-            var skip = inStream.skip(offset.get().getOffset());
-            if (skip < offset.get().getOffset())
-                throw new IOException("Could not get to the position in the file.");
+
+        FileChannel channel = FileChannel.open( Path.of(tableRootPath + '/' + segmentName)).
+                position(offset.get().getOffset());
+
+        try (var inStream = new DatabaseInputStream(Channels.newInputStream(channel))) {
             var record = inStream.readDbUnit();
 
             if (record.isEmpty())
@@ -134,4 +138,5 @@ public class SegmentImpl implements Segment {
         return true;
     }
 }
+
 
