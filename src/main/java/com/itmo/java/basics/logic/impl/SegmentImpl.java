@@ -19,8 +19,8 @@ public class SegmentImpl implements Segment {
     private static final int maxSize = 100_000;
 
     private String segmentName;
+    private String tableRootPath;
     private SegmentIndex segmentIndex;
-    private DatabaseInputStream inStream;
     private DatabaseOutputStream outStream;
     private long curOffset = 0;
 
@@ -37,10 +37,10 @@ public class SegmentImpl implements Segment {
 
         SegmentImpl segment = new SegmentImpl();
         segment.setSegmentName(segmentName);
+        segment.setTableRootPath(tableRootPath.toString());
         segment.setSegmentIndex(new SegmentIndex());
 
         try {
-            segment.setInStream(new DatabaseInputStream(new FileInputStream(segmentFile)));
             segment.setOutStream(new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
         } catch (FileNotFoundException ex) {
             throw new DatabaseException(segmentName + " is not found.", ex);
@@ -61,7 +61,9 @@ public class SegmentImpl implements Segment {
         this.segmentIndex = segmentIndex;
     }
 
-    public void setInStream(DatabaseInputStream inStream) { this.inStream = inStream; }
+    public void setTableRootPath(String tableRootPath) {
+        this.tableRootPath = tableRootPath;
+    }
 
     public void setOutStream(DatabaseOutputStream outStream) { this.outStream = outStream; }
 
@@ -95,14 +97,17 @@ public class SegmentImpl implements Segment {
         if (offset.isEmpty())
             return Optional.empty();
 
-        var skip = inStream.skip(offset.get().getOffset());
-        if (skip < offset.get().getOffset())
-            throw new IOException("Could not get to the position in the file.");
-        var record = inStream.readDbUnit();
-        if (record.isEmpty())
-            return Optional.empty();
+        try (var inStream = new DatabaseInputStream(new FileInputStream(tableRootPath + "/" + segmentName))) {
+            var skip = inStream.skip(offset.get().getOffset());
+            if (skip < offset.get().getOffset())
+                throw new IOException("Could not get to the position in the file.");
+            var record = inStream.readDbUnit();
 
-        return Optional.ofNullable(record.get().getValue());
+            if (record.isEmpty())
+                return Optional.empty();
+
+            return Optional.ofNullable(record.get().getValue());
+        }
     }
 
     @Override
