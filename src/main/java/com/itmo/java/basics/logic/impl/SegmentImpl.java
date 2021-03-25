@@ -19,8 +19,8 @@ public class SegmentImpl implements Segment {
     private static final int maxSize = 100_000;
 
     private String segmentName;
-    private String tableRootPath;
     private SegmentIndex segmentIndex;
+    private DatabaseInputStream inStream;
     private DatabaseOutputStream outStream;
     private boolean isReadOnly = false;
     private long curOffset = 0;
@@ -39,9 +39,9 @@ public class SegmentImpl implements Segment {
         SegmentImpl segment = new SegmentImpl();
         segment.setSegmentName(segmentName);
         segment.setSegmentIndex(new SegmentIndex());
-        segment.setTableRootPath(tableRootPath.toString());
 
         try {
+            segment.setInStream(new DatabaseInputStream(new FileInputStream(segmentFile)));
             segment.setOutStream(new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
         } catch (FileNotFoundException ex) {
             throw new DatabaseException(segmentName + " is not found.", ex);
@@ -63,11 +63,9 @@ public class SegmentImpl implements Segment {
         this.segmentIndex = segmentIndex;
     }
 
-    public void setOutStream(DatabaseOutputStream outStream) { this.outStream = outStream; }
+    public void setInStream(DatabaseInputStream inStream) { this.inStream = inStream; }
 
-    public void setTableRootPath(String tableRootPath) {
-        this.tableRootPath = tableRootPath;
-    }
+    public void setOutStream(DatabaseOutputStream outStream) { this.outStream = outStream; }
 
     @Override
     public String getName() {
@@ -106,13 +104,10 @@ public class SegmentImpl implements Segment {
         if (offset.isEmpty())
             return Optional.empty();
 
-        Optional<DatabaseRecord> record;
-        try (var inStream = new DatabaseInputStream(new FileInputStream(tableRootPath + "/" + segmentName))) {
-            var skip = inStream.skip(offset.get().getOffset());
-            if (skip < offset.get().getOffset())
-                throw new IOException("Could not get to the position in the file.");
-            record = inStream.readDbUnit();
-        }
+        var skip = inStream.skip(offset.get().getOffset());
+        if (skip < offset.get().getOffset())
+            throw new IOException("Could not get to the position in the file.");
+        var record = inStream.readDbUnit();
         if (record.isEmpty() || record.get().getValue() == null)
             return Optional.empty();
 
