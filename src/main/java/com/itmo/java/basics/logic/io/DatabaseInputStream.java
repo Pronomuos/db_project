@@ -29,14 +29,12 @@ public class DatabaseInputStream extends DataInputStream {
         byte [] key, value = null;
         try {
             keySize = readInt();
-            key = new byte[keySize];
-            for (int i = 0; i < keySize; ++i)
-                key[i] = readByte();
+            key = new byte [keySize];
+            read(key);
             valSize = readInt();
             if (valSize != -1) {
                 value = new byte[valSize];
-                for (int i = 0; i < valSize; ++i)
-                    value[i] = readByte();
+                read(value);
             }
         } catch (EOFException ex) {
             return record;

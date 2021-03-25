@@ -79,7 +79,7 @@ public class TableImpl implements Table {
     public Optional<byte[]> read(String objectKey) throws DatabaseException {
         var segment = tableIndex.searchForKey(objectKey);
         if (segment.isEmpty())
-            throw new DatabaseException("Table - " + tableName + ". No such a key " + objectKey + ".");
+            return Optional.empty();
 
         try {
             return segment.get().read(objectKey);

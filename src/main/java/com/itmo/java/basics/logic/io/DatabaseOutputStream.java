@@ -33,13 +33,11 @@ public class DatabaseOutputStream extends DataOutputStream {
     public int write(WritableDatabaseRecord databaseRecord) throws IOException {
         try {
             writeInt(databaseRecord.getKeySize());
-            for (var i : databaseRecord.getKey())
-                writeByte(i);
+            write(databaseRecord.getKey());
             writeInt(databaseRecord.getValueSize());
             if (databaseRecord.getValueSize() != -1)
-                for (var i : databaseRecord.getValue())
-                    writeByte(i);
-        } catch (Throwable ex) {
+                write(databaseRecord.getValue());
+        } catch (IOException ex) {
             throw new IOException("Could not write data into the file.", ex);
         }
 
