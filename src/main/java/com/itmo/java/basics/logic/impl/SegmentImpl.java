@@ -22,7 +22,6 @@ public class SegmentImpl implements Segment {
     private SegmentIndex segmentIndex;
     private DatabaseInputStream inStream;
     private DatabaseOutputStream outStream;
-    private boolean isReadOnly = false;
     private long curOffset = 0;
 
     static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
@@ -46,7 +45,6 @@ public class SegmentImpl implements Segment {
         } catch (FileNotFoundException ex) {
             throw new DatabaseException(segmentName + " is not found.", ex);
         }
-
 
         return segment;
     }
@@ -76,13 +74,7 @@ public class SegmentImpl implements Segment {
     public boolean write(String objectKey, byte[] objectValue) throws IOException {
         SetDatabaseRecord record;
         try {
-            record = SetDatabaseRecord.builder().
-                    keySize(objectKey.length()).
-                    key(objectKey.getBytes()).
-                    valSize(Optional.ofNullable(objectValue).isEmpty() ||
-                            objectValue.length == 0 ? -1 : objectValue.length).
-                    value(objectValue).
-                    build();
+            record = new SetDatabaseRecord(objectKey.getBytes(), objectValue);
         } catch (DatabaseException ex) {
             throw new IOException("Error while converting data into record.", ex);
         }
@@ -91,7 +83,6 @@ public class SegmentImpl implements Segment {
         curOffset += outStream.write(record);
         if (curOffset >= maxSize) {
             outStream.close();
-            isReadOnly = true;
             return false;
         }
 
@@ -108,33 +99,34 @@ public class SegmentImpl implements Segment {
         if (skip < offset.get().getOffset())
             throw new IOException("Could not get to the position in the file.");
         var record = inStream.readDbUnit();
-        if (record.isEmpty() || record.get().getValue() == null)
+        if (record.isEmpty())
             return Optional.empty();
 
-        return Optional.of(record.get().getValue());
+        return Optional.ofNullable(record.get().getValue());
     }
 
     @Override
     public boolean isReadOnly() {
-        return isReadOnly;
+        return curOffset >= maxSize;
     }
 
     @Override
     public boolean delete(String objectKey) throws IOException {
         RemoveDatabaseRecord record;
         try {
-            record =  new RemoveDatabaseRecord(objectKey.length(), objectKey.getBytes());
+            record =  new RemoveDatabaseRecord(objectKey.getBytes());
         } catch (DatabaseException ex) {
             throw new IOException("Error while converting data into record.", ex);
         }
 
-        curOffset += outStream.write(record);
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
+        curOffset += outStream.write(record);
         if (curOffset >= maxSize) {
-            isReadOnly = true;
+            outStream.close();
             return false;
         }
 
         return true;
     }
 }
+

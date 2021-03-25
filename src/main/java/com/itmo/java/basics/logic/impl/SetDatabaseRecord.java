@@ -8,25 +8,20 @@ import java.util.Optional;
 
 public class SetDatabaseRecord implements WritableDatabaseRecord {
 
-    private int keySize;
-    private byte[] key;
-    private int valSize;
-    private byte[] value;
+    private final byte[] key;
+    private final byte[] value;
 
-    public void setKeySize(int keySize) {
-        this.keySize = keySize;
-    }
+    public SetDatabaseRecord (byte[] key, byte[] value) throws DatabaseException {
+        if (key == null)
+            throw new DatabaseException("Cannot create database record without key.");
 
-    public void setKey(byte[] key) {
+        if (value != null)
+            this.value = value.length == 0 ? null : value;
+        else
+            this.value = null;
+
         this.key = key;
-    }
 
-    public void setValSize(int valSize) {
-        this.valSize = valSize;
-    }
-
-    public void setValue(byte[] value) {
-        this.value = value;
     }
 
     @Override
@@ -41,75 +36,24 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
 
     @Override
     public long size() {
-        return  4 * 2 + keySize + (valSize == -1 ? 0 : valSize);
+        return  4 * 2 + getKeySize() + (getValueSize() == -1 ? 0 : getValueSize());
     }
 
     @Override
     public boolean isValuePresented() {
-        return valSize != -1;
+        return value != null;
     }
 
     @Override
     public int getKeySize() {
-        return keySize;
+        return key.length;
     }
 
     @Override
     public int getValueSize() {
-        return valSize;
+        return isValuePresented() ? value.length : -1;
     }
 
-    public static SetDatabaseRecordBuilder builder() {
-        return new SetDatabaseRecordBuilder();
-    }
-
-    public static class SetDatabaseRecordBuilder {
-        private Integer keySize = null;
-        private byte[] key = null;
-        private Integer valSize = null;
-        private byte[] value = null;
-
-        public SetDatabaseRecordBuilder keySize (int keySize) {
-            this.keySize = keySize;
-            return this;
-        }
-
-        public SetDatabaseRecordBuilder key(byte[] key) {
-            this.key = key;
-            return this;
-        }
-
-        public SetDatabaseRecordBuilder valSize(int valSize) {
-            this.valSize = valSize;
-            return this;
-        }
-
-        public SetDatabaseRecordBuilder value(byte[] value) {
-            this.value = value;
-            return this;
-        }
-
-
-        public SetDatabaseRecord build() throws DatabaseException {
-            SetDatabaseRecord record = new SetDatabaseRecord();
-            if (key == null || keySize == null || valSize == null)
-                throw new DatabaseException("Cannot create database record without either key or key size" +
-                        "or value size.");
-
-            if (keySize < 0 || valSize < -1)
-                throw new DatabaseException("Invalid key or value sizes.");
-
-            /*if (valSize == -1 && value != null)
-                throw new DatabaseException("Database should be empty with value size -1.");*/
-
-            record.setKeySize(keySize);
-            record.setKey(key);
-            record.setValSize(valSize);
-            record.setValue(value);
-
-            return record;
-        }
-    }
 }
 
 

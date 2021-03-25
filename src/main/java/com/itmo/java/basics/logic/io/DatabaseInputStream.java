@@ -4,6 +4,7 @@ import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.logic.Database;
 import com.itmo.java.basics.logic.DatabaseRecord;
 import com.itmo.java.basics.logic.WritableDatabaseRecord;
+import com.itmo.java.basics.logic.impl.RemoveDatabaseRecord;
 import com.itmo.java.basics.logic.impl.SetDatabaseRecord;
 
 import java.io.*;
@@ -24,37 +25,32 @@ public class DatabaseInputStream extends DataInputStream {
      * @return следующую запись, если она существует. {@link Optional#empty()} - если конец файла достигнут
      */
     public Optional<DatabaseRecord> readDbUnit() throws IOException {
-        Optional<DatabaseRecord> record = Optional.empty();
-        int keySize, valSize;
-        byte [] key, value = null;
+        DatabaseRecord record;
         try {
-            keySize = readInt();
-            key = new byte [keySize];
+            int keySize = readInt();
+            if (keySize <= 0)
+                throw new DatabaseException("Key size is <= 0 while reading data.");
+            byte[] key = new byte [keySize];
             read(key);
-            valSize = readInt();
+            int valSize = readInt();
             if (valSize != -1) {
-                value = new byte[valSize];
+                byte[] value = new byte[valSize];
                 read(value);
+                record = new SetDatabaseRecord(key, value);
             }
+            else
+                record = new RemoveDatabaseRecord(key);
         } catch (EOFException ex) {
-            return record;
+            return Optional.empty();
         } catch (IOException ex) {
             throw new IOException("Error while reading data.", ex);
-        }
-
-        try {
-            record = Optional.of(SetDatabaseRecord.builder().
-                    keySize(keySize).
-                    key(key).
-                    valSize(valSize).
-                    value(value).
-                    build());
         } catch (DatabaseException ex) {
             throw new IOException("Error while converting data into record.", ex);
         }
 
-        return record;
+        return Optional.of(record);
     }
 }
+
 
 
