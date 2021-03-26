@@ -22,7 +22,7 @@ public class SegmentImpl implements Segment {
 
     private String segmentName;
     private SegmentIndex segmentIndex;
-    private String tableRootPath;
+    private DatabaseInputStream inStream;
     private DatabaseOutputStream outStream;
     private long curOffset = 0;
 
@@ -40,9 +40,9 @@ public class SegmentImpl implements Segment {
         SegmentImpl segment = new SegmentImpl();
         segment.setSegmentName(segmentName);
         segment.setSegmentIndex(new SegmentIndex());
-        segment.setTableRootPath(tableRootPath.toString());
 
         try {
+            segment.setInStream(new DatabaseInputStream(new BufferedInputStream(new FileInputStream(segmentFile))));
             segment.setOutStream(new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
         } catch (FileNotFoundException ex) {
             throw new DatabaseException(segmentName + " is not found.", ex);
@@ -63,10 +63,7 @@ public class SegmentImpl implements Segment {
         this.segmentIndex = segmentIndex;
     }
 
-    public void setTableRootPath(String tableRootPath) {
-        this.tableRootPath = tableRootPath;
-    }
-
+    public void setInStream(DatabaseInputStream inStream) { this.inStream = inStream; }
 
     public void setOutStream(DatabaseOutputStream outStream) { this.outStream = outStream; }
 
@@ -100,18 +97,17 @@ public class SegmentImpl implements Segment {
         if (offset.isEmpty())
             return Optional.empty();
 
+        inStream.mark(0);
+        var skip = inStream.skip(offset.get().getOffset());
+        if (skip < offset.get().getOffset())
+            throw new IOException("Could not get to the position in the file.");
+        var record = inStream.readDbUnit();
+        inStream.reset();
+        if (record.isEmpty())
+            return Optional.empty();
 
-        FileChannel channel = FileChannel.open( Path.of(tableRootPath + '/' + segmentName)).
-                position(offset.get().getOffset());
 
-        try (var inStream = new DatabaseInputStream(Channels.newInputStream(channel))) {
-            var record = inStream.readDbUnit();
-
-            if (record.isEmpty())
-                return Optional.empty();
-
-            return Optional.ofNullable(record.get().getValue());
-        }
+        return Optional.ofNullable(record.get().getValue());
     }
 
     @Override
@@ -138,5 +134,6 @@ public class SegmentImpl implements Segment {
         return true;
     }
 }
+
 
 
