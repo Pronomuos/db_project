@@ -62,6 +62,9 @@ public class DatabaseImpl implements Database {
         var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
                 orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
 
+        if (objectKey.length() +  objectValue.length + 8 > SegmentImpl.maxSize)
+            throw new DatabaseException("The record is too long. It should be less than 100_000 bytes.");
+
         table.write(objectKey, objectValue);
     }
 
