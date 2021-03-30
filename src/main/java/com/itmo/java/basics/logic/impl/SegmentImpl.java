@@ -86,9 +86,8 @@ public class SegmentImpl implements Segment {
 
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
         curOffset += outStream.write(record);
-        if (curOffset >= maxSize)
+        if (isReadOnly())
             outStream.close();
-
 
         return true;
     }

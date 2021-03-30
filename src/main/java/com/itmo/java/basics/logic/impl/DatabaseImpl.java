@@ -59,25 +59,37 @@ public class DatabaseImpl implements Database {
 
     @Override
     public void write(String tableName, String objectKey, byte[] objectValue) throws DatabaseException {
-        var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
-                orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
+        try {
+            var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
+                    orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
 
-        table.write(objectKey, objectValue);
+            table.write(objectKey, objectValue);
+        } catch (Throwable ex) {
+            throw new DatabaseException(ex);
+        }
     }
 
     @Override
     public Optional<byte[]> read(String tableName, String objectKey) throws DatabaseException {
-        var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
-                orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
+        try {
+            var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
+                    orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
 
-        return table.read(objectKey);
+            return table.read(objectKey);
+        } catch (Throwable ex) {
+            throw new DatabaseException(ex);
+        }
     }
 
     @Override
     public void delete(String tableName, String objectKey) throws DatabaseException {
-        var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
-                orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
+        try {
+            var table = tables.stream().filter(x -> x.getName().equals(tableName)).findAny().
+                    orElseThrow(() -> new DatabaseException("Cannot find the table, called - " + tableName + "."));
 
-        table.delete(objectKey);
+            table.delete(objectKey);
+        } catch (Throwable ex) {
+            throw new DatabaseException(ex);
+        }
     }
 }
