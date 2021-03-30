@@ -32,9 +32,9 @@ public class DatabaseOutputStream extends DataOutputStream {
      */
     public long write(WritableDatabaseRecord databaseRecord) throws IOException {
         try {
-            write(databaseRecord.getKeySize());
+            writeInt(databaseRecord.getKeySize());
             write(databaseRecord.getKey());
-            write(databaseRecord.getValueSize());
+            writeInt(databaseRecord.getValueSize());
             if (databaseRecord.getValueSize() != -1)
                 write(databaseRecord.getValue());
         } catch (IOException ex) {

@@ -98,7 +98,7 @@ public class SegmentImpl implements Segment {
         if (offset.isEmpty())
             return Optional.empty();
 
-        inStream.mark(0);
+        inStream.mark(Integer.MAX_VALUE);
         var skip = inStream.skip(offset.get().getOffset());
         if (skip < offset.get().getOffset())
             throw new IOException("Could not get to the position in the file.");
