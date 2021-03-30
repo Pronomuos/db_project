@@ -60,9 +60,6 @@ public class TableImpl implements Table {
 
     @Override
     public void write(String objectKey, byte[] objectValue) throws DatabaseException {
-        if (objectKey.length() +  objectValue.length + 8 > SegmentImpl.maxSize)
-            throw new DatabaseException("The record is too long. It should be less than 100_000 bytes.");
-
         if (segments.isEmpty())
             segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                     Path.of(pathToDatabaseRoot.toString(), tableName)));

@@ -74,10 +74,6 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean write(String objectKey, byte[] objectValue) throws IOException {
-        if (objectKey.length() +  objectValue.length + 8 > SegmentImpl.maxSize)
-            throw new IOException("The record is too long. It should be less than 100_000 bytes.");
-
-
         SetDatabaseRecord record;
         try {
             record = new SetDatabaseRecord(objectKey.getBytes(), objectValue);
