@@ -74,6 +74,9 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean write(String objectKey, byte[] objectValue) throws IOException {
+        if (isReadOnly())
+            return false;
+
         SetDatabaseRecord record;
         try {
             record = new SetDatabaseRecord(objectKey.getBytes(), objectValue);
@@ -83,10 +86,9 @@ public class SegmentImpl implements Segment {
 
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
         curOffset += outStream.write(record);
-        if (curOffset >= maxSize) {
+        if (curOffset >= maxSize)
             outStream.close();
-            return false;
-        }
+
 
         return true;
     }
