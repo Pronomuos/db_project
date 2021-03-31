@@ -99,7 +99,7 @@ public class SegmentImpl implements Segment {
             return Optional.empty();
 
         inStream.mark(Integer.MAX_VALUE);
-        var skip = inStream.skip(offset.get().getOffset());
+        var skip = inStream.skipBytes((int) offset.get().getOffset());
         if (skip < offset.get().getOffset())
             throw new IOException("Could not get to the position in the file.");
         var record = inStream.readDbUnit();
@@ -118,6 +118,9 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean delete(String objectKey) throws IOException {
+        if (isReadOnly())
+            return false;
+
         RemoveDatabaseRecord record;
         try {
             record =  new RemoveDatabaseRecord(objectKey.getBytes());
@@ -127,14 +130,12 @@ public class SegmentImpl implements Segment {
 
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
         curOffset += outStream.write(record);
-        if (curOffset >= maxSize) {
+        if (isReadOnly())
             outStream.close();
-            return false;
-        }
+
 
         return true;
     }
 }
-
 
 
