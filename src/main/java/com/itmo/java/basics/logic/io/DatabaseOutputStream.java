@@ -35,8 +35,9 @@ public class DatabaseOutputStream extends DataOutputStream {
             writeInt(databaseRecord.getKeySize());
             write(databaseRecord.getKey());
             writeInt(databaseRecord.getValueSize());
-            if (databaseRecord.getValueSize() != -1)
+            if (databaseRecord.getValueSize() != -1) {
                 write(databaseRecord.getValue());
+            }
         } catch (IOException ex) {
             throw new IOException("Could not write data into the file.", ex);
         }

@@ -22,17 +22,18 @@ public class TableImpl implements Table {
 
     static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
         File tableDir = new File (pathToDatabaseRoot.toString(), tableName);
-        if (tableDir.exists())
+        if (tableDir.exists()) {
             throw new DatabaseException("Table " + tableName + " already exists!");
-        if (!tableDir.mkdir())
+        }
+        if (!tableDir.mkdir()) {
             throw new DatabaseException("Impossible to create " + tableName + " table.");
+        }
 
         TableImpl table = new TableImpl();
         table.setTableName(tableName);
         table.setPathToDatabaseRoot(pathToDatabaseRoot);
         table.setTableIndex(tableIndex);
         table.setSegments(new ArrayList<>());
-
 
         return table;
     }
@@ -60,14 +61,16 @@ public class TableImpl implements Table {
 
     @Override
     public void write(String objectKey, byte[] objectValue) throws DatabaseException {
-        if (segments.isEmpty())
+        if (segments.isEmpty()) {
             segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                     Path.of(pathToDatabaseRoot.toString(), tableName)));
+        }
 
         try {
-            if (segments.get(segments.size() - 1).isReadOnly())
+            if (segments.get(segments.size() - 1).isReadOnly()) {
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                         Path.of(pathToDatabaseRoot.toString(), tableName)));
+            }
             segments.get(segments.size() - 1).write(objectKey, objectValue);
             tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
         } catch (IOException ex) {
@@ -78,8 +81,9 @@ public class TableImpl implements Table {
     @Override
     public Optional<byte[]> read(String objectKey) throws DatabaseException {
         var segment = tableIndex.searchForKey(objectKey);
-        if (segment.isEmpty())
+        if (segment.isEmpty()) {
             return Optional.empty();
+        }
 
         try {
             return segment.get().read(objectKey);
@@ -90,17 +94,20 @@ public class TableImpl implements Table {
 
     @Override
     public void delete(String objectKey) throws DatabaseException {
-        if(segments.isEmpty())
+        if(segments.isEmpty()) {
             throw new DatabaseException("There was no keys created in the table - " + tableName + ".");
+        }
 
         var segment = tableIndex.searchForKey(objectKey);
-        if (segment.isEmpty())
+        if (segment.isEmpty()) {
             throw new DatabaseException("Table - " + tableName + ". No such a key " + objectKey + ".");
+        }
 
         try {
-            if (segments.get(segments.size() - 1).isReadOnly())
+            if (segments.get(segments.size() - 1).isReadOnly()) {
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                         Path.of(pathToDatabaseRoot.toString(), tableName)));
+            }
             segments.get(segments.size() - 1).delete(objectKey);
             tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
         } catch (IOException ex) {

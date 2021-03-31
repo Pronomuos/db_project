@@ -2,17 +2,12 @@ package com.itmo.java.basics.logic.impl;
 
 import com.itmo.java.basics.index.impl.SegmentIndex;
 import com.itmo.java.basics.index.impl.SegmentOffsetInfoImpl;
-import com.itmo.java.basics.logic.Database;
-import com.itmo.java.basics.logic.DatabaseRecord;
 import com.itmo.java.basics.logic.Segment;
 import com.itmo.java.basics.exceptions.DatabaseException;
-import com.itmo.java.basics.logic.WritableDatabaseRecord;
 import com.itmo.java.basics.logic.io.DatabaseInputStream;
 import com.itmo.java.basics.logic.io.DatabaseOutputStream;
 
 import java.io.*;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -63,9 +58,13 @@ public class SegmentImpl implements Segment {
         this.segmentIndex = segmentIndex;
     }
 
-    public void setInStream(DatabaseInputStream inStream) { this.inStream = inStream; }
+    public void setInStream(DatabaseInputStream inStream) {
+        this.inStream = inStream;
+    }
 
-    public void setOutStream(DatabaseOutputStream outStream) { this.outStream = outStream; }
+    public void setOutStream(DatabaseOutputStream outStream) {
+        this.outStream = outStream;
+    }
 
     @Override
     public String getName() {
@@ -74,8 +73,9 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean write(String objectKey, byte[] objectValue) throws IOException {
-        if (isReadOnly())
+        if (isReadOnly()) {
             return false;
+        }
 
         SetDatabaseRecord record;
         try {
@@ -86,8 +86,9 @@ public class SegmentImpl implements Segment {
 
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
         curOffset += outStream.write(record);
-        if (isReadOnly())
+        if (isReadOnly()) {
             outStream.close();
+        }
 
         return true;
     }
@@ -95,18 +96,20 @@ public class SegmentImpl implements Segment {
     @Override
     public Optional<byte[]> read(String objectKey) throws IOException {
         var offset = segmentIndex.searchForKey(objectKey);
-        if (offset.isEmpty())
+        if (offset.isEmpty()) {
             return Optional.empty();
+        }
 
         inStream.mark(Integer.MAX_VALUE);
         var skip = inStream.skipBytes((int) offset.get().getOffset());
-        if (skip < offset.get().getOffset())
+        if (skip < offset.get().getOffset()) {
             throw new IOException("Could not get to the position in the file.");
+        }
         var record = inStream.readDbUnit();
         inStream.reset();
-        if (record.isEmpty())
+        if (record.isEmpty()) {
             return Optional.empty();
-
+        }
 
         return Optional.ofNullable(record.get().getValue());
     }
@@ -118,8 +121,9 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean delete(String objectKey) throws IOException {
-        if (isReadOnly())
+        if (isReadOnly()) {
             return false;
+        }
 
         RemoveDatabaseRecord record;
         try {
@@ -130,9 +134,9 @@ public class SegmentImpl implements Segment {
 
         segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(curOffset));
         curOffset += outStream.write(record);
-        if (isReadOnly())
+        if (isReadOnly()) {
             outStream.close();
-
+        }
 
         return true;
     }

@@ -28,8 +28,9 @@ public class DatabaseInputStream extends DataInputStream {
         DatabaseRecord record;
         try {
             int keySize = readInt();
-            if (keySize <= 0)
+            if (keySize <= 0) {
                 throw new DatabaseException("Key size is <= 0 while reading data.");
+            }
             byte[] key = new byte [keySize];
             read(key);
             int valSize = readInt();

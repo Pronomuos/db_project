@@ -12,13 +12,16 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
     private final byte[] value;
 
     public SetDatabaseRecord (byte[] key, byte[] value) throws DatabaseException {
-        if (key == null)
+        if (key == null) {
             throw new DatabaseException("Cannot create database record without key.");
+        }
 
-        if (value != null)
+        if (value != null) {
             this.value = value.length == 0 ? null : value;
-        else
+        }
+        else {
             this.value = null;
+        }
 
         this.key = key;
 

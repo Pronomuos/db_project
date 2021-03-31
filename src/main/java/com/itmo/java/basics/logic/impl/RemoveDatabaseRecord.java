@@ -8,8 +8,9 @@ public class RemoveDatabaseRecord implements WritableDatabaseRecord {
     private final byte[] key;
 
     public RemoveDatabaseRecord(byte[] key) throws DatabaseException {
-        if (key == null)
+        if (key == null) {
             throw new DatabaseException("Cannot create database record without key.");
+        }
 
         this.key = key;
     }
