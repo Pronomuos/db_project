@@ -33,7 +33,7 @@ public class DatabaseInputStream extends DataInputStream {
             byte[] key = new byte [keySize];
             read(key);
             int valSize = readInt();
-            if (valSize != -1) {
+            if (valSize != REMOVED_OBJECT_SIZE) {
                 byte[] value = new byte[valSize];
                 read(value);
                 record = new SetDatabaseRecord(key, value);

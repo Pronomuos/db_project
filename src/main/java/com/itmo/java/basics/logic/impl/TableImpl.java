@@ -64,12 +64,12 @@ public class TableImpl implements Table {
             segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                     Path.of(pathToDatabaseRoot.toString(), tableName)));
 
-        var segment = segments.get(segments.size() - 1);
-        tableIndex.onIndexedEntityUpdated(objectKey, segment);
         try {
-            if (!segment.write(objectKey, objectValue))
+            if (segments.get(segments.size() - 1).isReadOnly())
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                         Path.of(pathToDatabaseRoot.toString(), tableName)));
+            segments.get(segments.size() - 1).write(objectKey, objectValue);
+            tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
         } catch (IOException ex) {
             throw new DatabaseException("Error while writing data into segment.", ex);
         }
@@ -97,13 +97,15 @@ public class TableImpl implements Table {
         if (segment.isEmpty())
             throw new DatabaseException("Table - " + tableName + ". No such a key " + objectKey + ".");
 
-        tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
         try {
-            if (!segments.get(segments.size() - 1).delete(objectKey))
+            if (segments.get(segments.size() - 1).isReadOnly())
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                         Path.of(pathToDatabaseRoot.toString(), tableName)));
+            segments.get(segments.size() - 1).delete(objectKey);
+            tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
         } catch (IOException ex) {
             throw new DatabaseException("Error while writing data into segment.", ex);
         }
     }
 }
+

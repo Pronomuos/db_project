@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public class DatabaseImpl implements Database {
 
-
     private String dbName;
     private Path databaseRoot;
     private List<Table> tables;
