@@ -38,7 +38,7 @@ public class DatabaseImpl implements Database {
 
     @Override
     public void createTableIfNotExists(String tableName) throws DatabaseException {
-        if (tables.entrySet().stream().anyMatch(val -> val.getKey().equals(tableName))) {
+        if (tables.containsKey(tableName)) {
             throw new DatabaseException("Table " + tableName + " already exists!");
         }
         TableIndex index = new TableIndex();
