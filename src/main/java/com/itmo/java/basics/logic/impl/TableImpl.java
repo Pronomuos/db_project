@@ -15,10 +15,16 @@ import java.util.Optional;
 
 public class TableImpl implements Table {
 
-    private String tableName;
-    private Path pathToDatabaseRoot;
-    private TableIndex tableIndex;
-    private List<Segment> segments;
+    private final String tableName;
+    private final Path pathToDatabaseRoot;
+    private final TableIndex tableIndex;
+    private final List<Segment> segments = new ArrayList<>();
+
+    private TableImpl(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) {
+        this.tableName = tableName;
+        this.pathToDatabaseRoot = pathToDatabaseRoot;
+        this.tableIndex = tableIndex;
+    }
 
     static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
         File tableDir = new File (pathToDatabaseRoot.toString(), tableName);
@@ -28,30 +34,7 @@ public class TableImpl implements Table {
         if (!tableDir.mkdir()) {
             throw new DatabaseException("Impossible to create " + tableName + " table.");
         }
-
-        TableImpl table = new TableImpl();
-        table.setTableName(tableName);
-        table.setPathToDatabaseRoot(pathToDatabaseRoot);
-        table.setTableIndex(tableIndex);
-        table.setSegments(new ArrayList<>());
-
-        return table;
-    }
-
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
-
-    public void setPathToDatabaseRoot(Path pathToDatabaseRoot) {
-        this.pathToDatabaseRoot = pathToDatabaseRoot;
-    }
-
-    public void setTableIndex(TableIndex tableIndex) {
-        this.tableIndex = tableIndex;
-    }
-
-    public void setSegments(List<Segment> segments) {
-        this.segments = segments;
+        return new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
     }
 
     @Override
@@ -65,7 +48,6 @@ public class TableImpl implements Table {
             segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
                     Path.of(pathToDatabaseRoot.toString(), tableName)));
         }
-
         try {
             if (segments.get(segments.size() - 1).isReadOnly()) {
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
@@ -84,7 +66,6 @@ public class TableImpl implements Table {
         if (segment.isEmpty()) {
             return Optional.empty();
         }
-
         try {
             return segment.get().read(objectKey);
         } catch (IOException ex) {
@@ -97,12 +78,10 @@ public class TableImpl implements Table {
         if(segments.isEmpty()) {
             throw new DatabaseException("There was no keys created in the table - " + tableName + ".");
         }
-
         var segment = tableIndex.searchForKey(objectKey);
         if (segment.isEmpty()) {
             throw new DatabaseException("Table - " + tableName + ". No such a key " + objectKey + ".");
         }
-
         try {
             if (segments.get(segments.size() - 1).isReadOnly()) {
                 segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),

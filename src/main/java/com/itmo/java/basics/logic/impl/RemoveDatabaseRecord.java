@@ -11,7 +11,6 @@ public class RemoveDatabaseRecord implements WritableDatabaseRecord {
         if (key == null) {
             throw new DatabaseException("Cannot create database record without key.");
         }
-
         this.key = key;
     }
 

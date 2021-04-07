@@ -48,7 +48,6 @@ public class DatabaseInputStream extends DataInputStream {
         } catch (DatabaseException ex) {
             throw new IOException("Error while converting data into record.", ex);
         }
-
         return Optional.of(record);
     }
 }

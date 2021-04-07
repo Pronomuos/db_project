@@ -41,7 +41,6 @@ public class DatabaseOutputStream extends DataOutputStream {
         } catch (IOException ex) {
             throw new IOException("Could not write data into the file.", ex);
         }
-
-        return databaseRecord.size();                                          // Error could be here!
+        return databaseRecord.size();
     }
 }

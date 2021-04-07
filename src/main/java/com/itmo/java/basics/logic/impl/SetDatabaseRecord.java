@@ -15,16 +15,13 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
         if (key == null) {
             throw new DatabaseException("Cannot create database record without key.");
         }
-
         if (value != null) {
             this.value = value.length == 0 ? null : value;
         }
         else {
             this.value = null;
         }
-
         this.key = key;
-
     }
 
     @Override
