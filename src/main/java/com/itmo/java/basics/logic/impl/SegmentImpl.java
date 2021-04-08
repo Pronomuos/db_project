@@ -7,7 +7,12 @@ import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.logic.io.DatabaseInputStream;
 import com.itmo.java.basics.logic.io.DatabaseOutputStream;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -28,7 +33,7 @@ public class SegmentImpl implements Segment, AutoCloseable {
     }
 
     static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
-        File segmentFile = new File (tableRootPath.toString(), segmentName);
+        File segmentFile = new File(tableRootPath.toString(), segmentName);
         try {
             if (!segmentFile.createNewFile())
                 throw new DatabaseException("Segment " + segmentName + " already exists!");

@@ -1,13 +1,15 @@
 package com.itmo.java.basics.logic.io;
 
 import com.itmo.java.basics.exceptions.DatabaseException;
-import com.itmo.java.basics.logic.Database;
 import com.itmo.java.basics.logic.DatabaseRecord;
 import com.itmo.java.basics.logic.WritableDatabaseRecord;
 import com.itmo.java.basics.logic.impl.RemoveDatabaseRecord;
 import com.itmo.java.basics.logic.impl.SetDatabaseRecord;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
 /**

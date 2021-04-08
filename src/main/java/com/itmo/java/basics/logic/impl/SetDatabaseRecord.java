@@ -3,9 +3,6 @@ package com.itmo.java.basics.logic.impl;
 import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.logic.WritableDatabaseRecord;
 
-import java.util.Optional;
-
-
 public class SetDatabaseRecord implements WritableDatabaseRecord {
 
     private final byte[] key;
