@@ -30,7 +30,17 @@ public class DatabaseOutputStream extends DataOutputStream {
      * @return размер записи
      * @throws IOException если запись не удалась
      */
-    public int write(WritableDatabaseRecord databaseRecord) throws IOException {
-        return 0;
+    public long write(WritableDatabaseRecord databaseRecord) throws IOException {
+        try {
+            writeInt(databaseRecord.getKeySize());
+            write(databaseRecord.getKey());
+            writeInt(databaseRecord.getValueSize());
+            if (databaseRecord.getValueSize() != -1) {
+                write(databaseRecord.getValue());
+            }
+        } catch (IOException ex) {
+            throw new IOException("Could not write data into the file.", ex);
+        }
+        return databaseRecord.size();
     }
 }

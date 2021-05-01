@@ -1,9 +1,13 @@
 package com.itmo.java.basics.logic.io;
 
+import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.logic.DatabaseRecord;
 import com.itmo.java.basics.logic.WritableDatabaseRecord;
+import com.itmo.java.basics.logic.impl.RemoveDatabaseRecord;
+import com.itmo.java.basics.logic.impl.SetDatabaseRecord;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -23,6 +27,32 @@ public class DatabaseInputStream extends DataInputStream {
      * @return следующую запись, если она существует. {@link Optional#empty()} - если конец файла достигнут
      */
     public Optional<DatabaseRecord> readDbUnit() throws IOException {
-        return null;
+        DatabaseRecord record;
+        try {
+            int keySize = readInt();
+            if (keySize <= 0) {
+                throw new DatabaseException("Key size is <= 0 while reading data.");
+            }
+            byte[] key = new byte [keySize];
+            read(key);
+            int valSize = readInt();
+            if (valSize != REMOVED_OBJECT_SIZE) {
+                byte[] value = new byte[valSize];
+                read(value);
+                record = new SetDatabaseRecord(key, value);
+            }
+            else
+                record = new RemoveDatabaseRecord(key);
+        } catch (EOFException ex) {
+            return Optional.empty();
+        } catch (IOException ex) {
+            throw new IOException("Error while reading data.", ex);
+        } catch (DatabaseException ex) {
+            throw new IOException("Error while converting data into record.", ex);
+        }
+        return Optional.of(record);
     }
 }
+
+
+
