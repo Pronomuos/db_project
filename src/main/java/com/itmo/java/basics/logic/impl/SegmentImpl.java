@@ -1,50 +1,70 @@
 package com.itmo.java.basics.logic.impl;
 
+import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.index.impl.SegmentIndex;
 import com.itmo.java.basics.index.impl.SegmentOffsetInfoImpl;
+import com.itmo.java.basics.initialization.SegmentInitializationContext;
 import com.itmo.java.basics.logic.Segment;
-import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.logic.io.DatabaseInputStream;
 import com.itmo.java.basics.logic.io.DatabaseOutputStream;
 
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
-import java.io.FileNotFoundException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class SegmentImpl implements Segment, AutoCloseable {
-
-    public static final int maxSize = 100_000;
-
     private final String segmentName;
-    private final SegmentIndex segmentIndex = new SegmentIndex();
+    private SegmentIndex segmentIndex;
     private final DatabaseInputStream inStream;
     private final DatabaseOutputStream outStream;
     private long curOffset = 0;
+
+    public static final int maxSize = 100_000;
 
     private SegmentImpl (String segmentName, DatabaseInputStream inStream, DatabaseOutputStream outStream) {
         this.segmentName = segmentName;
         this.inStream = inStream;
         this.outStream = outStream;
+        this.segmentIndex = new SegmentIndex();
     }
 
-    static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
+    private SegmentImpl (String segmentName, DatabaseInputStream inStream, DatabaseOutputStream outStream,
+                         SegmentIndex segmentIndex, long curOffset) {
+        this.segmentName = segmentName;
+        this.inStream = inStream;
+        this.outStream = outStream;
+        this.segmentIndex = segmentIndex;
+        this.curOffset = curOffset;
+    }
+
+    public static Segment initializeFromContext(SegmentInitializationContext context) {
+        Path segmentPath = context.getSegmentPath();
+        String segmentName = context.getSegmentName();
+        SegmentImpl segment;
+        try {
+        var outStream = context.getCurrentSize() < maxSize ?
+                new DatabaseOutputStream(new FileOutputStream(segmentPath.toString(), true)) : null;
+            segment = new SegmentImpl(segmentName,
+                    new DatabaseInputStream(new BufferedInputStream(new FileInputStream(segmentPath.toString()))),
+                    outStream, context.getIndex(), context.getCurrentSize());
+        } catch (FileNotFoundException ex) {
+            throw new Error(segmentName + " is not found.", ex);
+        }
+        return segment;
+    }
+
+    public static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
         File segmentFile = new File(tableRootPath.toString(), segmentName);
         try {
-            if (!segmentFile.createNewFile())
-                throw new DatabaseException("Segment " + segmentName + " already exists!");
+            segmentFile.createNewFile();
         } catch (IOException ex) {
             throw new DatabaseException("Impossible to create " + segmentName + " table.");
         }
         SegmentImpl segment;
         try {
             segment = new SegmentImpl(segmentName,
-                new DatabaseInputStream(new BufferedInputStream(new FileInputStream(segmentFile))),
-                new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
+                    new DatabaseInputStream(new BufferedInputStream(new FileInputStream(segmentFile))),
+                    new DatabaseOutputStream(new FileOutputStream(segmentFile, true)));
         } catch (FileNotFoundException ex) {
             throw new DatabaseException(segmentName + " is not found.", ex);
         }
@@ -127,5 +147,3 @@ public class SegmentImpl implements Segment, AutoCloseable {
         inStream.close();
     }
 }
-
-

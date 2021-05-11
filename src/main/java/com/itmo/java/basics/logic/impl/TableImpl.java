@@ -2,22 +2,20 @@ package com.itmo.java.basics.logic.impl;
 
 import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.index.impl.TableIndex;
+import com.itmo.java.basics.initialization.TableInitializationContext;
 import com.itmo.java.basics.logic.Segment;
 import com.itmo.java.basics.logic.Table;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class TableImpl implements Table {
-
     private final String tableName;
     private final Path pathToDatabaseRoot;
     private final TableIndex tableIndex;
-    private final List<Segment> segments = new ArrayList<>();
+    private Segment currentSegment = null;
 
     private TableImpl(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) {
         this.tableName = tableName;
@@ -25,7 +23,20 @@ public class TableImpl implements Table {
         this.tableIndex = tableIndex;
     }
 
-    static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
+    private TableImpl(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex, Segment currentSegment) {
+        this.tableName = tableName;
+        this.pathToDatabaseRoot = pathToDatabaseRoot;
+        this.tableIndex = tableIndex;
+        this.currentSegment = currentSegment;
+    }
+
+    public static Table initializeFromContext(TableInitializationContext context) {
+        return new CachingTable(new TableImpl(context.getTableName(), context.getTablePath(), context.getTableIndex(), context.getCurrentSegment()));
+
+    }
+
+
+    public static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
         File tableDir = new File (pathToDatabaseRoot.toString(), tableName);
         if (tableDir.exists()) {
             throw new DatabaseException("Table " + tableName + " already exists!");
@@ -33,7 +44,7 @@ public class TableImpl implements Table {
         if (!tableDir.mkdir()) {
             throw new DatabaseException("Impossible to create " + tableName + " table.");
         }
-        return new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
+        return new CachingTable(new TableImpl(tableName, pathToDatabaseRoot, tableIndex));
     }
 
     @Override
@@ -43,17 +54,17 @@ public class TableImpl implements Table {
 
     @Override
     public void write(String objectKey, byte[] objectValue) throws DatabaseException {
-        if (segments.isEmpty()) {
-            segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
-                    Path.of(pathToDatabaseRoot.toString(), tableName)));
+        if (currentSegment == null) {
+            currentSegment =  SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
+                    Path.of(pathToDatabaseRoot.toString(), tableName));
         }
         try {
-            if (segments.get(segments.size() - 1).isReadOnly()) {
-                segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
-                        Path.of(pathToDatabaseRoot.toString(), tableName)));
+            if (currentSegment.isReadOnly()) {
+                currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
+                        Path.of(pathToDatabaseRoot.toString(), tableName));
             }
-            segments.get(segments.size() - 1).write(objectKey, objectValue);
-            tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
+            currentSegment.write(objectKey, objectValue);
+            tableIndex.onIndexedEntityUpdated(objectKey, currentSegment);
         } catch (IOException ex) {
             throw new DatabaseException("Error while writing data into segment.", ex);
         }
@@ -74,7 +85,7 @@ public class TableImpl implements Table {
 
     @Override
     public void delete(String objectKey) throws DatabaseException {
-        if(segments.isEmpty()) {
+        if(currentSegment == null) {
             throw new DatabaseException("There was no keys created in the table - " + tableName + ".");
         }
         var segment = tableIndex.searchForKey(objectKey);
@@ -82,15 +93,14 @@ public class TableImpl implements Table {
             throw new DatabaseException("Table - " + tableName + ". No such a key " + objectKey + ".");
         }
         try {
-            if (segments.get(segments.size() - 1).isReadOnly()) {
-                segments.add(SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
-                        Path.of(pathToDatabaseRoot.toString(), tableName)));
+            if (currentSegment.isReadOnly()) {
+                currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName),
+                        Path.of(pathToDatabaseRoot.toString(), tableName));
             }
-            segments.get(segments.size() - 1).delete(objectKey);
-            tableIndex.onIndexedEntityUpdated(objectKey, segments.get(segments.size() - 1));
+            currentSegment.delete(objectKey);
+            tableIndex.onIndexedEntityUpdated(objectKey, currentSegment);
         } catch (IOException ex) {
             throw new DatabaseException("Error while writing data into segment.", ex);
         }
     }
 }
-

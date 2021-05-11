@@ -2,6 +2,7 @@ package com.itmo.java.basics.logic.impl;
 
 import com.itmo.java.basics.exceptions.DatabaseException;
 import com.itmo.java.basics.index.impl.TableIndex;
+import com.itmo.java.basics.initialization.DatabaseInitializationContext;
 import com.itmo.java.basics.logic.Database;
 import com.itmo.java.basics.logic.Table;
 
@@ -15,11 +16,22 @@ public class DatabaseImpl implements Database {
 
     private final String dbName;
     private final Path databaseRoot;
-    private final Map<String, Table> tables = new HashMap<String, Table>();
+    private final Map<String, Table> tables;
 
     private DatabaseImpl (String dbName, Path databaseRoot) {
         this.dbName = dbName;
         this.databaseRoot = databaseRoot;
+        this.tables = new HashMap<String, Table>();
+    }
+
+    private DatabaseImpl (String dbName, Path databaseRoot, Map<String, Table> tables) {
+        this.dbName = dbName;
+        this.databaseRoot = databaseRoot;
+        this.tables = tables;
+    }
+
+    public static Database initializeFromContext(DatabaseInitializationContext context) {
+        return new DatabaseImpl(context.getDbName(), context.getDatabasePath(), context.getTables());
     }
 
     public static Database create(String dbName, Path databaseRoot) throws DatabaseException {
