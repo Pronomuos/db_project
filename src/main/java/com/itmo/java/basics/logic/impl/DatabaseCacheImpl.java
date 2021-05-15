@@ -2,7 +2,9 @@ package com.itmo.java.basics.logic.impl;
 
 import com.itmo.java.basics.logic.DatabaseCache;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class DatabaseCacheImpl implements DatabaseCache {
     private static final int CAPACITY = 5_000;

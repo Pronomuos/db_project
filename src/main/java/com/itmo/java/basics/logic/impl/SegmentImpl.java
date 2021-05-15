@@ -58,7 +58,7 @@ public class SegmentImpl implements Segment, AutoCloseable {
         try {
             segmentFile.createNewFile();
         } catch (IOException ex) {
-            throw new DatabaseException("Impossible to create " + segmentName + " table.");
+            throw new DatabaseException("Impossible to create " + segmentName + " table.", ex);
         }
         SegmentImpl segment;
         try {
@@ -72,6 +72,12 @@ public class SegmentImpl implements Segment, AutoCloseable {
     }
 
     static String createSegmentName(String tableName) {
+        try {
+            Thread.sleep(1);
+        }
+        catch (InterruptedException ex ) {
+            throw new Error("Error while creating segment name.", ex);
+        }
         return tableName + "_" + System.currentTimeMillis();
     }
 

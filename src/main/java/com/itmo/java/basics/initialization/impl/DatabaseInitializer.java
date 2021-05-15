@@ -35,7 +35,7 @@ public class DatabaseInitializer implements Initializer {
             }
             for (String tableName : tableNames) {
                 TableInitializationContext tableInitContext = new TableInitializationContextImpl(tableName,
-                        initialContext.currentDbContext().getDatabasePath(), new TableIndex());
+                        initialContext.currentDbContext().getDatabasePath() , new TableIndex());
                 InitializationContext downstreamContext = InitializationContextImpl.builder()
                         .executionEnvironment(initialContext.executionEnvironment())
                         .currentDatabaseContext(initialContext.currentDbContext())

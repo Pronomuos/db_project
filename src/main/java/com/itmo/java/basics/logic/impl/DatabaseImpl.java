@@ -31,7 +31,7 @@ public class DatabaseImpl implements Database {
     }
 
     public static Database initializeFromContext(DatabaseInitializationContext context) {
-        return new DatabaseImpl(context.getDbName(), context.getDatabasePath(), context.getTables());
+        return new DatabaseImpl(context.getDbName(), context.getDatabasePath().getParent(), context.getTables());
     }
 
     public static Database create(String dbName, Path databaseRoot) throws DatabaseException {
