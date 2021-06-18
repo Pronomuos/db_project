@@ -31,9 +31,9 @@ public class GetKeyCommand implements DatabaseCommand {
      * @throws IllegalArgumentException если передано неправильное количество аргументов
      */
     public GetKeyCommand(ExecutionEnvironment env, List<RespObject> commandArgs) {
-        if (env == null || commandArgs == null) {
+        /*if (env == null || commandArgs == null) {
             throw new Error ("Error while initializing GetKeyCommand - one of the parameters is null.");
-        }
+        }*/
         this.env = env;
         this.commandArgs = commandArgs;
         if (commandArgs.size() != REQUIRED_ARGS_NUM) {
@@ -53,7 +53,7 @@ public class GetKeyCommand implements DatabaseCommand {
         String key = commandArgs.get(DatabaseCommandArgPositions.KEY.getPositionIndex()).asString();
         Optional<Database> db = env.getDatabase(databaseName);
         if (db.isEmpty()) {
-            return DatabaseCommandResult.error("Error while executing CreateTableCommand: no db called - " + databaseName + ".");
+            return DatabaseCommandResult.error("Error while executing GetKeyCommand: no db called - " + databaseName + ".");
         }
         Optional<byte[]> res;
         try {

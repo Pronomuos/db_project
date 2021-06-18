@@ -52,7 +52,7 @@ public class DeleteKeyCommand implements DatabaseCommand {
         String key = commandArgs.get(DatabaseCommandArgPositions.KEY.getPositionIndex()).asString();
         Optional<Database> db = env.getDatabase(databaseName);
         if (db.isEmpty()) {
-            return DatabaseCommandResult.error("Error while executing CreateTableCommand: no db called - " + databaseName + ".");
+            return DatabaseCommandResult.error("Error while executing DeleteKeyCommand: no db called - " + databaseName + ".");
         }
         Optional<byte[]> res;
         try {

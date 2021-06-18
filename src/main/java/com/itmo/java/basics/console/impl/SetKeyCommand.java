@@ -53,7 +53,7 @@ public class SetKeyCommand implements DatabaseCommand {
         String value = commandArgs.get(DatabaseCommandArgPositions.VALUE.getPositionIndex()).asString();
         Optional<Database> db = env.getDatabase(databaseName);
         if (db.isEmpty()) {
-            return DatabaseCommandResult.error("Error while executing CreateTableCommand: no db called - " + databaseName + ".");
+            return DatabaseCommandResult.error("Error while executing SetKeyCommand: no db called - " + databaseName + ".");
         }
         Optional<byte[]> res;
         try {
@@ -61,7 +61,7 @@ public class SetKeyCommand implements DatabaseCommand {
             db.get().write(tableName, key, value.getBytes());
         }
         catch (DatabaseException ex) {
-            return DatabaseCommandResult.error("Error while executing GetKeyCommand.");
+            return DatabaseCommandResult.error("Error while executing SetKeyCommand.");
         }
         return DatabaseCommandResult.success(res.isEmpty() ? null : res.get());
     }
